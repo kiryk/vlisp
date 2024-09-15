@@ -1,0 +1,20 @@
+(def counter (fn ()
+	(def n 0)
+	(def p 0)
+	(fn ()
+		(set p n)
+		(set n (+ n 1))
+		p)))
+
+(def c (counter))
+(write (c))
+(write (c))
+(write (c))
+(write (c))
+
+(def c (counter))
+(write (c))
+(write (c))
+(write (c))
+(write (c))
+
