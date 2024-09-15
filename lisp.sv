@@ -60,6 +60,10 @@ class Value;
 		return "nil";
 	endfunction
 
+	virtual function automatic string help();
+		return "no help string for this object";
+	endfunction
+
 	virtual function automatic Value eval(Context ctx);
 		return this;
 	endfunction
@@ -85,6 +89,10 @@ class List extends Value;
 			s = {s, v[i].format(), i+1 < v.size() ? " " : ""};
 		s = {s, ")"};
 		return s;
+	endfunction
+
+	virtual function automatic string help();
+		return "an object of list type";
 	endfunction
 
 	virtual function automatic Value eval(Context ctx);
@@ -115,6 +123,10 @@ class Func extends List;
 		scope = s;
 		v = args.v;
 	endfunction
+
+	virtual function automatic string help();
+		return "an object of function type";
+	endfunction
 endclass
 
 class Number extends Value;
@@ -130,6 +142,10 @@ class Number extends Value;
 		s.itoa(v);
 		return s;
 	endfunction
+
+	virtual function automatic string help();
+		return "an object of number type";
+	endfunction
 endclass
 
 class String extends Value;
@@ -142,6 +158,10 @@ class String extends Value;
 	virtual function automatic string format();
 		return v;
 	endfunction
+
+	virtual function automatic string help();
+		return "an object of string type";
+	endfunction
 endclass
 
 class Symbol extends Value;
@@ -153,6 +173,10 @@ class Symbol extends Value;
 
 	virtual function automatic string format();
 		return v;
+	endfunction
+
+	virtual function automatic string help();
+		return "an object of symbol type";
 	endfunction
 
 	virtual function automatic Value eval(Context ctx);
@@ -172,6 +196,10 @@ class Stmt extends Value;
 		return {"[built-in \"", name, "\"]"};
 	endfunction
 
+	virtual function automatic string help();
+		return "an object of built-in function type";
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		$error("undefined function automatic: %s", args.v[0].format());
 	endfunction
@@ -180,6 +208,11 @@ endclass
 class StmtImport extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "import");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(import {source path})\n\n",
+		        "reads files and runs them in the current scope"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -198,6 +231,11 @@ class StmtDef extends Stmt;
 		create(ctx, "def");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(def {symbol} {value})\n\n",
+		        "defines a variable and initiates it with a value"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		ctx.def(args.v[1].format(), args.v[2].eval(ctx));
 		return args;
@@ -207,6 +245,11 @@ endclass
 class StmtSet extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "set");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(set {symbol} {value})\n\n",
+		        "sets variable to a value"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -220,6 +263,11 @@ class StmtFn extends Stmt;
 		create(ctx, "fn");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(fn ([argument name] ...) [expression] ...)\n\n",
+						"creates a function object"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		Func f = new(ctx, args);
 		return f;
@@ -229,6 +277,11 @@ endclass
 class StmtDo extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "do");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(do [expression] ...)\n\n",
+						"evaluates an expression list, useful in loops"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -243,6 +296,12 @@ endclass
 class StmtIf extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "if");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(if {condition} {eval if true} [eval if false])\n\n",
+						"checks if a condition is true (not equal 0) then evaluates and returns\n",
+						"an appropriate expression"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -261,6 +320,12 @@ class StmtAnd extends Stmt;
 		create(ctx, "and");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(and {expression} {expression})\n\n",
+						"returns the first expression if its false, ",
+						"otherwise returns the value of the second one"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		Number cond;
 
@@ -274,6 +339,12 @@ endclass
 class StmtOr extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "or");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(or {expression} {expression})\n\n",
+						"returns the first expression if its true, ",
+						"otherwise returns the value of the second one"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -292,6 +363,12 @@ class StmtFor extends Stmt;
 		create(ctx, "for");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(for {condition} {expression})\n\n",
+						"repeats evaluation of an expression as long as ",
+						"the condition is true"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		Number cond;
 		Value res = new;
@@ -305,6 +382,11 @@ endclass
 class StmtRead extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "read");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(read)\n\n",
+						"parses user input as an s-expression and returns it"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -323,6 +405,11 @@ class StmtWrite extends Stmt;
 		create(ctx, "write");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(write [expression] ...)\n\n",
+						"prints values"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		for (integer i = 1; i < args.v.size(); i++)
 			$display("%s ", args.v[i].eval(ctx).format());
@@ -333,6 +420,11 @@ endclass
 class StmtList extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "list");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(list [expression] ...)\n\n",
+						"creates a list of values"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -348,6 +440,14 @@ class StmtAccess extends Stmt;
 	function automatic new(Context ctx);
 		create(ctx, "access");
 		create(ctx, "@");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(access {list} {index} [value]) ",
+						"or (@ {list} {index} [value])\n\n",
+						"returns a list element under a given index ",
+						"if value argument is not given,\n",
+						"otherwise stores the value in the list"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -371,6 +471,11 @@ class StmtAppend extends Stmt;
 		create(ctx, "append");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(append {list} {value})\n\n",
+						"appends a value to the end of the list"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		List l;
 
@@ -387,6 +492,11 @@ class StmtLen extends Stmt;
 		create(ctx, "#");
 	endfunction
 
+	virtual function automatic string help();
+		return {"(len {list}) or (# {list})\n\n",
+						"returns length of the list"};
+	endfunction
+
 	virtual function automatic Value call(Context ctx, List args);
 		List l;
 		Number n;
@@ -399,9 +509,40 @@ class StmtLen extends Stmt;
 	endfunction
 endclass
 
+class StmtHelp extends Stmt;
+	function automatic new(Context ctx);
+		create(ctx, "help");
+	endfunction
+
+	virtual function automatic string help();
+		return {"(help {object})\n\n",
+						"prints help about objects, for build-in functions there is ",
+						"also syntax info displayed,\n",
+						"the following convention is used:\n\n",
+						"  string   -- entering this exact string is required\n",
+						"  {string} -- required argument\n",
+						"  [string] -- optional argument\n",
+						"  ...      -- preceeding argument can be repeated"};
+	endfunction
+
+	virtual function automatic Value call(Context ctx, List args);
+		Value v = args.v[1].eval(ctx);
+
+		if (v)
+			$display("help: %s", v.help());
+
+		return v;
+	endfunction
+endclass
+
 class StmtMath extends Stmt;
 	virtual function automatic integer op(integer a, b);
 		return 0;
+	endfunction
+
+	virtual function automatic string help();
+		return {"(", this.name, " {expression} ...)\n\n",
+						"evaluates ", this.name, " operation"};
 	endfunction
 
 	virtual function automatic Value call(Context ctx, List args);
@@ -561,13 +702,14 @@ function automatic void main();
 	StmtList       _11 = new(ctx);
 	StmtAccess     _12 = new(ctx);
 	StmtLen        _13 = new(ctx);
-	StmtAppend     _14 = new(ctx);
-	StmtAdd        _15 = new(ctx);
-	StmtSub        _16 = new(ctx);
-	StmtRem        _17 = new(ctx);
-	StmtShiftLeft  _18 = new(ctx);
-	StmtShiftRight _19 = new(ctx);
-	StmtLess       _20 = new(ctx);
+	StmtHelp       _14 = new(ctx);
+	StmtAppend     _15 = new(ctx);
+	StmtAdd        _16 = new(ctx);
+	StmtSub        _17 = new(ctx);
+	StmtRem        _18 = new(ctx);
+	StmtShiftLeft  _19 = new(ctx);
+	StmtShiftRight _20 = new(ctx);
+	StmtLess       _21 = new(ctx);
 
 	STDIN = $fopen("/dev/stdin", "r");
 
