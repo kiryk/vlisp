@@ -1,0 +1,15 @@
+(def primes (list))
+(def n 0)
+(def p 2)
+(def i 0)
+
+(set n (read))
+
+(for (< (# primes) n) (do
+	(set i 0)
+	(for (and (< i (# primes)) (!= 0 (% p (access primes i))))
+		(set i (+ i 1)))
+	(if (= i (# primes)) (do
+		(write p)
+		(append primes p)))
+	(set p (+ p 1))))

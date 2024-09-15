@@ -1,0 +1,20 @@
+(def false 0)
+(def true 1)
+
+(def not (fn (p)
+  (if p 0 1)))
+
+;(def and (fn (p q)
+;  (if p q p)))
+
+;(def or (fn (p q)
+;  (if p p q)))
+
+(def != (fn (a b)
+  (or (< a b) (< b a))))
+
+(def = (fn (a b)
+  (not (!= a b))))
+
+(def abs (fn (n)
+  (if (< 0 n) n (- 0 n))))
